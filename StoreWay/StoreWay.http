@@ -1,0 +1,6 @@
+@StoreWay_HostAddress = http://localhost:5149
+
+GET {{StoreWay_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
