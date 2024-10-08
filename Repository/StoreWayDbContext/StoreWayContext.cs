@@ -10,7 +10,7 @@ namespace Repository.StoreWayDbContext
         public DbSet<Category> Categories { get; set; }
         public DbSet<Products> Products { get; set; }
         public DbSet <UserAdress> UserAdress { get; set; }
-
+        public DbSet <Orders> Orders { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -36,8 +36,12 @@ namespace Repository.StoreWayDbContext
                 .WithMany(u => u.UserAdresses)
                 .HasForeignKey(ua => ua.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-
+           
+            modelBuilder.Entity<Orders>()
+                .HasOne(c => c.Users)
+                .WithMany(u => u.Orders)
+                .HasForeignKey(c => c.UserId);
+           
 
         }
     }

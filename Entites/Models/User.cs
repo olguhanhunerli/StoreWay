@@ -16,6 +16,7 @@ namespace Entities.Models
         public string Role { get; set; }
         public DateTime CreateDate { get; set; } = DateTime.UtcNow;
         public ICollection<UserAdress> UserAdresses { get; set; }
+        public ICollection<Orders> Orders { get; set; }
 
 
     }

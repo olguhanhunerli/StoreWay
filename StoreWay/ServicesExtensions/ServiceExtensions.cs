@@ -27,6 +27,7 @@ namespace StoreWay.ServicesExtensions
             services.AddScoped<ICategoryServices, CategoryServices>();
             services.AddScoped<IProductsServices, ProductsServices>();
             services.AddScoped<IUserAdressService, UserAdressService>();
+            services.AddScoped<IOrdersService, OrdersService>();
         }
         public static void RepositoryConfiguration(this IServiceCollection services)
         {
@@ -34,6 +35,7 @@ namespace StoreWay.ServicesExtensions
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IProductsRepository, ProductsRepository>();
             services.AddScoped<IUserAdressRepository, UserAdressRepository>();
+            services.AddScoped<IOrdersRepository, OrdersRepository>();
             
         }
     }

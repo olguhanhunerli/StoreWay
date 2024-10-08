@@ -41,7 +41,7 @@ namespace Presentation.Controllers
                 Description = productDto.Description,
                 Price = productDto.Price,
                 StockQuantity = productDto.StockQuantity,
-                Brand = productDto.Brand,  // Eğer brand da varsa, eklemeyi unutmayın.
+                Brand = productDto.Brand,  
                 RetailPrice = productDto.RetailPrice,
                 Status = productDto.Status
             };
