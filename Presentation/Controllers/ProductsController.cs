@@ -22,35 +22,77 @@ namespace Presentation.Controllers
             _productsServices = productsServices;
         }
 
-        [HttpGet("GetAllProductsAsync")]
+        [HttpGet("All")]
         public async Task<IActionResult> GetAllProductsAsync()
         {
             var entity = await _productsServices.GetAllProducts();
+            
             return Ok(entity);
         }
         [Authorize(Roles = "Admin")]
-        [HttpPost("AddProductAsync")]
-        public async Task<IActionResult> AddProductAsync(ProductDto productDto)
+        [HttpPost("Add")]
+        public async Task<IActionResult> AddProductAsync(CreateProductDto productDto)
         {
             var entity = new Products
             {
-                
                 ProductName = productDto.ProductName,
                 CategoryId = productDto.CategoryId,
                 CreateDate = DateTime.UtcNow,
                 Description = productDto.Description,
                 Price = productDto.Price,
                 StockQuantity = productDto.StockQuantity,
+                Brand = productDto.Brand,  // Eğer brand da varsa, eklemeyi unutmayın.
+                RetailPrice = productDto.RetailPrice,
+                Status = productDto.Status
             };
+
             await _productsServices.AddProductsAsync(entity);
-            return Ok(entity);
+
+            var productDtoResponse = new ProductDto
+            {
+                ProductId = entity.ProductId,
+                ProductName = entity.ProductName,
+                Description = entity.Description,
+                Price = entity.Price,
+                StockQuantity = entity.StockQuantity,
+                Brand = entity.Brand,
+                RetailPrice = entity.RetailPrice,
+                Status = entity.Status,
+                CreateDate = entity.CreateDate,
+                CategoryName = entity.Category != null ? entity.Category.CategoryName : null
+            };
+            return Ok(productDtoResponse);
+        }
+        [HttpGet("ById")]
+        public async Task<IActionResult> GetByIdAsync(int id)
+        {
+            var dto = await _productsServices.GetProductsById(id);
+
+            return Ok(dto);
         }
         [Authorize(Roles = "Admin")]
-        [HttpDelete("DeleteProductAsync")]
+        [HttpDelete()]
         public async Task<IActionResult> DeleteProductAsync([FromForm] int id)
         {
             await _productsServices.DeleteProductsAsync(id);
             return Ok();
+        }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateProduct(UpdateProductDto productDto, int id)
+        {
+            if (id != productDto.ProductId)
+            {
+                return BadRequest("Product ID mismatch");
+            }
+            try
+            {
+                await _productsServices.UpdateProductAsync(productDto);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            return Ok(productDto);
         }
 
     }

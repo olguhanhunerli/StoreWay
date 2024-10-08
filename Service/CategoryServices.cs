@@ -36,11 +36,20 @@ namespace Service
             {
                 CategoryId = c.CategoryId,
                 CategoryName = c.CategoryName,
+                ParentCategoryId = c.ParentCategoryId,
                 Products = c.Products.Select(p => new ProductDto
                 {
                     ProductId = p.ProductId,
                     ProductName = p.ProductName,
+                    Description = p.Description,
                     Price = p.Price,
+                    StockQuantity = p.StockQuantity,
+                    CategoryId = (int)p.CategoryId,  
+                    CategoryName = p.Category != null ? p.Category.CategoryName : null,  // Ürünün kategori ismi
+                    Brand = p.Brand,
+                    RetailPrice = p.RetailPrice,
+                    Status = p.Status,
+                    CreateDate = p.CreateDate
                 }).ToList()
             }).ToList();
         }

@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 
 namespace Repository.Contract
 {
-    public interface ICategoryRepository : IRepository<Category>
+    public interface IUserAdressRepository : IRepository<UserAdress>
     {
-        
     }
 }

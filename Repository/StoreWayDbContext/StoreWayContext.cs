@@ -1,10 +1,5 @@
 ﻿using Entities.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Repository.StoreWayDbContext
 {
@@ -14,21 +9,36 @@ namespace Repository.StoreWayDbContext
         public DbSet<User> Users { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Products> Products { get; set; }
+        public DbSet <UserAdress> UserAdress { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<Category>()
-                .HasOne(c => c.ParentCategory)
-                .WithMany(c => c.SubCategories)
-                .HasForeignKey(c => c.ParentCategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<Category>()
-                .HasOne(c => c.ParentCategory)
-                .WithMany(c => c.SubCategories)
-                .HasForeignKey(c =>c.ParentCategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
             modelBuilder.Entity<Products>()
-                .HasKey(p => p.ProductId);
+              .HasKey(c => c.ProductId);
+            modelBuilder.Entity<Products>()
+                .HasOne(p => p.Category) 
+                .WithMany(c => c.Products)  
+                .HasForeignKey(p => p.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);  
+
+             modelBuilder.Entity<Category>()
+                 .HasOne(c => c.ParentCategory)
+                 .WithMany()
+                 .HasForeignKey(c => c.ParentCategoryId)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UserAdress>()
+                .Property(u => u.Type)
+                .HasConversion<string>();
+            modelBuilder.Entity<UserAdress>()
+                .HasOne(ua => ua.Users)
+                .WithMany(u => u.UserAdresses)
+                .HasForeignKey(ua => ua.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+
         }
     }
 }

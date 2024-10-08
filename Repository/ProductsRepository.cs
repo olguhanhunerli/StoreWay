@@ -38,14 +38,16 @@ namespace Repository
 
         public async Task<IEnumerable<Products>> GetAllAsync()
         {
-            return await _context.Products.ToListAsync();
+            return await _context.Products.Include(c => c.Category).ToListAsync();
+                
         }
 
         public async Task<Products> GetByIdAsync(int id)
         {
-            var entity = await _context.Products.FindAsync(id);
+            var entity = await _context.Products.Include(c =>c.Category).FirstOrDefaultAsync(p => p.ProductId == id);
             if(entity == null)
                 throw new ArgumentException($"Aradığınız Id {id} bulunamadı.");
+            
             return entity;
         }
 
@@ -53,6 +55,13 @@ namespace Repository
         {
            _context.Update(entity);
             await _context.SaveChangesAsync();
+        }
+        public async Task<Products> GetProductById(int id)
+        {
+            var entity = await _context.Products.FindAsync(id);
+            if (entity == null)
+                throw new ArgumentException("Id Bulunamadı");
+            return entity;
         }
     }
 }

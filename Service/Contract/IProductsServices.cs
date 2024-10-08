@@ -10,9 +10,10 @@ namespace Service.Contract
 {
     public interface IProductsServices
     {
-        Task<IEnumerable<Products>> GetAllProducts();
+        Task<IEnumerable<ProductDto>> GetAllProducts();
         Task AddProductsAsync(Products products);
         Task DeleteProductsAsync(int id);
-        Task UpdateProductAsync(Products products);
+        Task UpdateProductAsync(UpdateProductDto products);
+        Task<ProductDto> GetProductsById(int id);
     }
 }

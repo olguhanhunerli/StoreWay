@@ -22,14 +22,14 @@ namespace Presentation.Controllers
             _services = services;
         }
 
-        [HttpGet("GetAllCategoriesAsync")]
+        [HttpGet("All")]
         public async Task<IActionResult> GetAllCategoriesAsync()
         { 
             var entitiy = await _services.GetAllCategoriesAsync();
             return Ok(entitiy);
         }
        // [Authorize(Roles ="Admin")]
-        [HttpPost("AddCategoriesAsync")]
+        [HttpPost("Add")]
         public async Task<IActionResult> AddCategoriesAsync(CategoryDto categoryDto)
         {
             var dto = new Category
@@ -39,7 +39,7 @@ namespace Presentation.Controllers
             await _services.AddCategoryAsync(dto);
             return Ok(dto);
         }
-        [HttpDelete("DeleteCategory")]
+        [HttpDelete()]
         public async Task<IActionResult> DeleteCategory([FromHeader] int id)
         {
             await  _services.DeleteCategoryAsync(id);

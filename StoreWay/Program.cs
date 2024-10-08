@@ -56,7 +56,10 @@ builder.Services.RepositoryConfiguration();
 
 builder.Services.AddSwaggerGen(option =>
 {
+ 
+    
     option.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo API", Version = "v1" });
+
     option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -93,6 +96,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "StoreWay API V1");
+        
         
     });
 }

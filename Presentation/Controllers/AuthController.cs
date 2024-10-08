@@ -1,11 +1,6 @@
 ﻿using Entities.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Service.Contract;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Presentation.Controllers
 {
@@ -25,7 +20,7 @@ namespace Presentation.Controllers
             string role = string.IsNullOrEmpty(registerDto.Role) ? "Customer" : registerDto.Role;
             try
             {
-                await _service.RegisterAsync(registerDto.UserName, registerDto.Email, registerDto.Password,registerDto.Role);
+                await _service.RegisterAsync(registerDto.UserName, registerDto.Email, registerDto.Password, registerDto.Role);
                 var response = new
                 {
                     Message = "Kayıt Başarılı",
@@ -46,7 +41,7 @@ namespace Presentation.Controllers
             try
             {
                 var token = await _service.LoginAsync(loginDto.Email, loginDto.Password);
-               
+
                 return Ok(new { Token = token });
             }
             catch
@@ -54,6 +49,6 @@ namespace Presentation.Controllers
                 return Unauthorized();
             }
         }
-
+        
     }
 }

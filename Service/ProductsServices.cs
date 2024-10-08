@@ -30,15 +30,60 @@ namespace Service
             await _repository.DeleteAsync(id);
         }
 
-        public async Task<IEnumerable<Products>> GetAllProducts()
+        public async Task<IEnumerable<ProductDto>> GetAllProducts()
         {
+           
+            var product = await _repository.GetAllAsync();
+            return product.Select(p => new ProductDto
+            {
+                ProductId = p.ProductId,
+                ProductName = p.ProductName,
+                Description = p.Description,
+                Price = p.Price,
+                StockQuantity = p.StockQuantity,
+                Brand = p.Brand,
+                RetailPrice = p.RetailPrice,
+                Status = p.Status,
+                CreateDate = p.CreateDate,
+                CategoryName = p.Category != null ? p.Category.CategoryName : null 
+            }).ToList();
+        }
             
-           return await _repository.GetAllAsync();
+        public async Task<ProductDto> GetProductsById(int id)
+        {
+          var product =  await _repository.GetByIdAsync(id);
+            var productDto = new ProductDto
+            {
+                ProductId = product.ProductId,
+                ProductName = product.ProductName,
+                Description = product.Description,
+                Price = product.Price,
+                StockQuantity = product.StockQuantity,
+                Brand = product.Brand,
+                RetailPrice = product.RetailPrice,
+                Status = product.Status,
+                CreateDate = product.CreateDate,
+                CategoryName = product.Category != null ? product.Category.CategoryName : null
+
+            };
+            return productDto;
         }
 
-        public async Task UpdateProductAsync(Products products)
+        public async Task UpdateProductAsync(UpdateProductDto updateDto)
         {
-            await _repository.UpdateAsync(products);
+            var product = await _repository.GetByIdAsync(updateDto.ProductId);
+            if (product == null)
+                throw new ArgumentException($"Product with ID {updateDto.ProductId} not found.");
+            product.ProductName = updateDto.ProductName;
+            product.Description = updateDto.Description;
+            product.Price = updateDto.Price;
+            product.StockQuantity = updateDto.StockQuantity;
+            product.Brand = updateDto.Brand;
+            product.CategoryId = updateDto.CategoryId;
+            product.Status = updateDto.Status;
+            product.UpdateAt = DateTime.UtcNow;
+
+            await _repository.UpdateAsync(product);
         }
     }
 }
