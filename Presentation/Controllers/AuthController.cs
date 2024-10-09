@@ -1,4 +1,6 @@
 ﻿using Entities.Models.DTO;
+using Entities.Models.Response;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Service.Contract;
 
@@ -24,8 +26,8 @@ namespace Presentation.Controllers
                 var response = new
                 {
                     Message = "Kayıt Başarılı",
-                    UserName = registerDto.UserName,
-                    Email = registerDto.Email,
+                    Username = registerDto.UserName,
+                    email = registerDto.Email,
                     Role = role
                 };
                 return Ok(response);
@@ -36,6 +38,8 @@ namespace Presentation.Controllers
             }
         }
         [HttpPost("login")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LoginResponse))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResponse))]
         public async Task<IActionResult> Login(LoginDto loginDto)
         {
             try

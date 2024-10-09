@@ -46,7 +46,7 @@ namespace Service
                 Subject = new ClaimsIdentity(new Claim[]
                 {
                     new Claim("sub", user.UserId.ToString()),
-                    new Claim("role", user.Role)  // Rolü token'a ekledik
+                    new Claim("role", user.Role)  
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(double.Parse(jwtSettings["TokenExpiryInMinutes"])),
                 Issuer = jwtSettings["Issuer"],
