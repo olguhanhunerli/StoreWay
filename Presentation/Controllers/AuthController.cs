@@ -1,7 +1,9 @@
 ﻿using Entities.Models.DTO;
 using Entities.Models.Response;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Service.Contract;
 
 namespace Presentation.Controllers
@@ -37,19 +39,43 @@ namespace Presentation.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        [AllowAnonymous]
         [HttpPost("login")]
+        [Produces("application/json")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LoginResponse))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorResponse))]
         public async Task<IActionResult> Login(LoginDto loginDto)
         {
             try
             {
-                var token = await _service.LoginAsync(loginDto.Email, loginDto.Password);
 
-                return Ok(new { Token = token });
+                var response = await _service.LoginAsync(loginDto.Email, loginDto.Password);
+
+                return Ok(new
+                {
+                    Token = response["Token"],
+                    RefreshToken = response["RefreshToken"]
+                });
             }
-            catch
+            catch( Exception ex)
             {
+                Console.WriteLine($"Hata: {ex.Message}");
+                return Unauthorized(new { Message = "Giriş başarısız.", Detay = ex.Message });
+            }
+
+        }
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] TokenDto tokenDto)
+        {
+            try 
+            {
+                var newToken = await _service.RefreshToken(tokenDto.RefreshToken);
+                return Ok(new { Token = newToken });
+                
+            }
+            catch 
+            { 
+
                 return Unauthorized();
             }
         }

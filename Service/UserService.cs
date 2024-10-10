@@ -1,5 +1,5 @@
 ﻿using Entities.Models;
-
+using Entities.Models.Response;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -28,15 +29,17 @@ namespace Service
             _passwordHasher = passwordHasher;
             _configuration = configuration;
         }
-
-        public async Task<string> LoginAsync(string email, string password)
+       
+        public async Task<Dictionary<string, string>> LoginAsync(string email, string password)
         {
+           
             var user = await _repository.GetUserByEmail(email);
-            if (user == null || _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password) == Microsoft.AspNetCore.Identity.PasswordVerificationResult.Failed)
+           
+           if (user == null || _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password) == PasswordVerificationResult.Failed)
             {
-                throw new Exception("Kullanıcı adı veya şifre yanlış");
+                throw new Exception("Kullanıcı bulunamadı");
             }
-
+            var response = new LoginResponse();
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"]);
@@ -56,9 +59,21 @@ namespace Service
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
-                return tokenString;
-           
+
+            var refreshToken = GenerateRefreshToken();
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            await _repository.UpdateUser(user);
+
+
+            return new Dictionary<string, string>
+                {
+                    { "Token", tokenString },
+                    { "RefreshToken", refreshToken }
+                };
+
         }
+ 
 
         public async Task RegisterAsync(string userName, string email, string password, string role = "Customer")
         {
@@ -77,5 +92,63 @@ namespace Service
             user.PasswordHash = _passwordHasher.HashPassword(user, password);
             await _repository.AddUser(user);
         }
+        public async Task<string> RefreshToken( string refreshToken)
+        {
+            var jwtSettings = _configuration.GetSection("JwtSettings");
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"]);
+
+            var principal = GetPrincipalFromExpiredToken(refreshToken);
+            var userId = principal.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+            var user = await _repository.GetById(int.Parse(userId));
+            if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow ) 
+            {
+                throw new SecurityTokenException("Geçersiz Refresh Token");
+            }
+            var newToken = tokenHandler.CreateToken(new SecurityTokenDescriptor
+            {
+                Subject = (ClaimsIdentity)principal.Claims,
+                Expires = DateTime.UtcNow.AddMinutes(double.Parse(jwtSettings["TokenExpiryInMinutes"])),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            });
+            var tokenString = tokenHandler.WriteToken(newToken);
+            var newRefreshToken = GenerateRefreshToken();
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            await _repository.UpdateUser(user);
+            return refreshToken;
+        }
+        public string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomNumber);
+                return Convert.ToBase64String(randomNumber);
+            }
+        }
+        public ClaimsPrincipal GetPrincipalFromExpiredToken(string refreshToken)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["JwtSettings:SecretKey"])),
+                ValidateLifetime = false 
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var principal = tokenHandler.ValidateToken(refreshToken, tokenValidationParameters, out SecurityToken securityToken);
+
+            if (!(securityToken is JwtSecurityToken jwtSecurityToken) || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new SecurityTokenException("Geçersiz token");
+            }
+
+            return principal;
+        }
+       
     }
 }

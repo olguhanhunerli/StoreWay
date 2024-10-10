@@ -11,5 +11,8 @@ namespace Repository.Contract
     {
         Task<User> GetUserByEmail(string email);
         Task AddUser(User user);
+        Task UpdateUser(User user);
+        Task<User> GetById(int id);
+        Task<User> GetUserByRefreshToken(string refreshToken);
     }
 }

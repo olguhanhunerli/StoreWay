@@ -43,7 +43,7 @@ builder.Services.AddControllers(config =>
             options.JsonSerializerOptions.ReferenceHandler = null;
             options.JsonSerializerOptions.WriteIndented = true;
         })
-    .AddXmlDataContractSerializerFormatters()
+    
     .AddApplicationPart(typeof(Presentation.AssemblyReference).Assembly);
 
 
