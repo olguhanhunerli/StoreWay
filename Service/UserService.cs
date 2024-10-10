@@ -92,33 +92,43 @@ namespace Service
             user.PasswordHash = _passwordHasher.HashPassword(user, password);
             await _repository.AddUser(user);
         }
-        public async Task<string> RefreshToken( string refreshToken)
+        public async Task<string> RefreshToken(string refreshToken)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"]);
 
-            var principal = GetPrincipalFromExpiredToken(refreshToken);
-            var userId = principal.FindFirst(ClaimTypes.NameIdentifier).Value;
-
-            var user = await _repository.GetById(int.Parse(userId));
-            if (user == null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow ) 
+            var user = await _repository.GetUserByRefreshToken(refreshToken);
+            if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
             {
-                throw new SecurityTokenException("Geçersiz Refresh Token");
+                throw new SecurityTokenException("Geçersiz veya süresi dolmuş refresh token");
             }
-            var newToken = tokenHandler.CreateToken(new SecurityTokenDescriptor
+
+                var claims = new[]
+                   {
+                        new Claim("sub", user.UserId.ToString()),
+                        new Claim("role", user.Role)
+                    };
+
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = (ClaimsIdentity)principal.Claims,
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddMinutes(double.Parse(jwtSettings["TokenExpiryInMinutes"])),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            });
-            var tokenString = tokenHandler.WriteToken(newToken);
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var newAccessToken = tokenHandler.WriteToken(token);
+
+            // Yeni refresh token oluşturma
             var newRefreshToken = GenerateRefreshToken();
             user.RefreshToken = newRefreshToken;
             user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
             await _repository.UpdateUser(user);
-            return refreshToken;
-        }
+
+            return newAccessToken;
+        
+    }
         public string GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
